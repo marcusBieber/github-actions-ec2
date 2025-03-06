@@ -1,0 +1,27 @@
+name: CI - Test React App
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install Dependencies
+        run: cd app && npm install
+
+      - name: Run Tests
+        run: cd app && npm test
