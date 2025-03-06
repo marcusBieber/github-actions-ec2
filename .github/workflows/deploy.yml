@@ -57,7 +57,7 @@ jobs:
           EC2_USER: ubuntu
         run: |
           # Kopiere den Build-Ordner zur EC2-Instanz
-          scp -o StrictHostKeyChecking=no -r dist $EC2_USER@$EC2_HOST:~/app
+          scp -o StrictHostKeyChecking=no -r dist/* $EC2_USER@$EC2_HOST:~/app
 
           # Verbinde dich mit EC2 und führe die Nginx-Installation + Deployment durch
           ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
@@ -69,7 +69,7 @@ jobs:
 
             # Entferne alte Dateien und kopiere die neuen
             sudo rm -rf /var/www/html/*
-            sudo cp -r ~/app/dist/* /var/www/html/
+            sudo cp -r ~/app/* /var/www/html/
 
             # Konfiguriere Nginx
             echo 'server {
