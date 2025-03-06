@@ -69,7 +69,7 @@ jobs:
 
             # Entferne alte Dateien und kopiere die neuen
             sudo rm -rf /var/www/html/*
-            sudo cp -r ~/app/dist/* /var/www/html/
+            sudo cp -r ~/app/* /var/www/html/
 
             # Konfiguriere Nginx
             echo 'server {
