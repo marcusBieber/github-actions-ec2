@@ -37,35 +37,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: build
           path: dist
 
+      - name: Setup ssh keys
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
       - name: Deploy to EC2
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ubuntu
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-
+          # Kopiere den Build-Ordner zur EC2-Instanz
           scp -o StrictHostKeyChecking=no -r dist $EC2_USER@$EC2_HOST:~/app
 
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
-            # Install Nginx if not installed
+          # Verbinde dich mit EC2 und führe die Nginx-Installation + Deployment durch
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+            # Installiere Nginx, falls es nicht vorhanden ist
             if ! command -v nginx &> /dev/null; then
               sudo apt update
               sudo apt install -y nginx
             fi
 
-            # Copy new build files
+            # Entferne alte Dateien und kopiere die neuen
             sudo rm -rf /var/www/html/*
             sudo cp -r ~/app/dist/* /var/www/html/
 
-            # Configure Nginx
+            # Konfiguriere Nginx
             echo 'server {
               listen 80;
               server_name _;
@@ -76,6 +82,6 @@ jobs:
               }
             }' | sudo tee /etc/nginx/sites-available/default
 
-            # Restart Nginx
+            # Starte Nginx neu
             sudo systemctl restart nginx
           EOF
